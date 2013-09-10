@@ -128,25 +128,25 @@ private ServerRemotes mRemotes;
 			for (int i = 0; i < size; i++)
 			{
 				FileInputStream mStream = new FileInputStream(
-						mUploadFiles.get(i));
-	            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+					mUploadFiles.get(i));
+	            		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 	            	
-	            int nRead;
-	            byte[] data = new byte[1024];
+	            		int nRead;
+	            		byte[] data = new byte[1024];
 	            
-	            while ((nRead = mStream.read(data, 0, data.length)) != -1)
-	            {
-	               buffer.write(data, 0, nRead);
-	            }
-	            byte[] byteArray = buffer.toByteArray(); 
-	            byteFiles[i] = new ByteArrayFile(mUploadFiles.get(i),byteArray);
-	         }
-	    }
+			        while ((nRead = mStream.read(data, 0, data.length)) != -1)
+	        		{
+	        			buffer.write(data, 0, nRead);
+	            		}
+		                byte[] byteArray = buffer.toByteArray(); 
+	            		byteFiles[i] = new ByteArrayFile(mUploadFiles.get(i),byteArray);
+	         	}
+	    	}
 		catch (RemoteException re)
 		{
 			re.printStackTrace();
 			return false;
-	    }
+	    	}
 		catch (FileNotFoundException fnfe)
 		{
 			fnfe.printStackTrace();
