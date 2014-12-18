@@ -1,9 +1,10 @@
 package kb360.desktop;
 
-//import kb360.service.*;
-
 import java.io.*;
 import java.util.*;
+
+import javax.swing.JOptionPane;
+
 import javafx.application.Application;
 import javafx.event.*;
 import javafx.geometry.*;
@@ -50,20 +51,18 @@ public class MainPanel extends Application
     	  se.printStackTrace();
     	  System.exit(0);
           //JOptionPane Causes errors on Windows machines in the browser.
-          //JOptionPane.showMessageDialog(null,"Cannot connect to the server");
+          JOptionPane.showMessageDialog(null,"Cannot connect to the server");
       }
       mNotification = new Notification(mStage);
- 
 
       mTabPane = new TabPane();
-      mTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);//SELECTED_TAB);
+      mTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
 
       mSearchPane = new Pane();
       mAdminPane = new StackPane();
       
       setUpSearchPane();
       setUpAdminPane();
-//      setUpTabPane();
        
       mSearchPane.setStyle("-fx-border-width: 5px,5px, 5px, 5px;-fx-border-color: transparent transparent blue transparent;");
       mSearchPane.setMinWidth(mSearchPane.getPrefWidth());
@@ -94,7 +93,6 @@ public class MainPanel extends Application
       mStage.setY(primaryScreenBounds.getMinY());
       mStage.setWidth(primaryScreenBounds.getWidth());
       mStage.setHeight(primaryScreenBounds.getHeight());        
-
       
       initialize();
 
@@ -103,7 +101,7 @@ public class MainPanel extends Application
       root.setCenter(mTabPane);
       
       Scene scene = new Scene(root, 1200,800);
-//      scene.getStylesheets().add("stylesheet.css");
+
       String title = "";
       if ((title = System.getProperty("title")) == null)
          title = defaultTitle;
@@ -302,18 +300,4 @@ public class MainPanel extends Application
             addTab(results);
       }
    }
-
-   /*private void setUpTabPane()
-   {
-//      Tab tab= new Tab();
-//      mTabPane.getTabs().add(tab);
-/*       
-      vsep = new Separator();
-      vsep.setOrientation(Orientation.VERTICAL);
-       
-      HBox tabHBox = new HBox();
-       
-      tabHBox.getChildren().addAll(vsep);
-      tabHBox.setMargin(vsep,new Insets(10,10,10,10));
-   }*/
 }

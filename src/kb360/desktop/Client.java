@@ -3,8 +3,7 @@ package kb360.desktop;
 import kb360.service.*;
 
 import java.io.*;
-import java.rmi.*;
-import java.rmi.registry.*;
+import java.net.*;
 import java.util.*;
 
 /**
@@ -14,71 +13,39 @@ import java.util.*;
  */
 public class Client
 {
- /*
-private ServerRemotes mRemotes;
- */
-    /**
-     * A {@link java.rmi.Remote} to the KB360 server to search files.
-     */
-	private Search mSearcher;
-
-	/**
-	 * A {@link java.rmi.Remote} to the KB360 server to upload files.
-	 */
-	private Upload mUploader;
-
 	/**
 	 * A list of files to upload.
 	 */
 	private List<File> mUploadFiles;
-   
+	
+	private ObjectInputStream mInputStream;
+	private ObjectOutputStream mOutputStream;
+	private Socket socket;
+	private boolean connected;
+	
 	/**
 	 * Connects to the server with the given IP address.
 	 * 
-	 * @param serverIP the IP address to the KB360 server. If wanting to connect to localhost, "localhost" will due.
-	 * @throws ServerException thrown when there is no searching connection to the server. Uploading isn't essential. 
+	 * @param serverIP the IP address to the KB360 server.
+	 * @throws ServerException thrown when there is no connection to the server. 
 	 */
 	public Client(String serverIP) throws ServerException
-	{
-		ServerRemotes remotes;
-		         
+	{	         
+		connected = false;
 		try
 		{
-			String lookupName = "rmi://" + serverIP + ":1099/server";
-			Registry registry = LocateRegistry.getRegistry(serverIP);
-
-			remotes = (ServerRemotes) registry.lookup(lookupName);
-			
-			if (remotes == null)
-			{
-				throw new ServerException("Cannot search or upload. Remotes to the server are null.");
-			}
-			else
-			{
-				if ( (mSearcher = remotes.getSearchRemote()) == null)
-				{
-					throw new ServerException("Cannot search. The remote to search is null.");
-				}
-				if ( (mUploader = remotes.getUploadRemote()) == null)
-				{
-					System.err.println("The remote to upload is null");
-				}
-			}	
+			socket = new Socket(serverIP,6000);
+			mOutputStream = new ObjectOutputStream( new
+				BufferedOutputStream(socket.getOutputStream()));
+			mOutputStream.flush();
+			mInputStream = new ObjectInputStream( new 
+				BufferedInputStream(socket.getInputStream()));
+			connected = true;
 		}
-		catch (NotBoundException nbe)
+		catch (Exception e)
 		{
-			throw new ServerException(nbe);
+			e.printStackTrace();
 		}
-	    catch (RemoteException re)
-	    {
-	    	throw new ServerException(re);
-	    }
-		
-        /*
-         *  Now that the server is connected to the server ensure proxyHost is "localhost" so that
-         *  the browser will not try to use the previous proxyHost to open a document.
-         */
-        System.setProperty("proxyHost","localhost");
 	}
 	
 	/**
@@ -87,13 +54,8 @@ private ServerRemotes mRemotes;
 	 */
 	public boolean canUpload()
 	{
-		return mUploader != null;
+		return connected;
 	}
-	   
-	/*   ServerRemotes getRemotes()
-	   {
-	      return mRemotes;
-	   }*/
 	
 	/**
 	 * Setter for the files that will later be uploaded.
@@ -129,24 +91,21 @@ private ServerRemotes mRemotes;
 			{
 				FileInputStream mStream = new FileInputStream(
 					mUploadFiles.get(i));
-	            		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+	            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 	            	
-	            		int nRead;
-	            		byte[] data = new byte[1024];
+	            int nRead;
+	            byte[] data = new byte[1024];
 	            
-			        while ((nRead = mStream.read(data, 0, data.length)) != -1)
-	        		{
-	        			buffer.write(data, 0, nRead);
-	            		}
-		                byte[] byteArray = buffer.toByteArray(); 
-	            		byteFiles[i] = new ByteArrayFile(mUploadFiles.get(i),byteArray);
-	         	}
-	    	}
-		catch (RemoteException re)
-		{
-			re.printStackTrace();
-			return false;
-	    	}
+			    while ((nRead = mStream.read(data, 0, data.length)) != -1)
+	        	{
+	        		buffer.write(data, 0, nRead);
+	            }
+		        
+				byte[] byteArray = buffer.toByteArray(); 
+	            byteFiles[i] = new ByteArrayFile(mUploadFiles.get(i),byteArray);
+	            mStream.close();
+	        }
+	    }
 		catch (FileNotFoundException fnfe)
 		{
 			fnfe.printStackTrace();
@@ -177,11 +136,13 @@ private ServerRemotes mRemotes;
 	{
 		try
 		{
-			return mUploader.upload(files);
+			mOutputStream.writeObject(files);
+			mOutputStream.flush();
+			return (boolean) mInputStream.readObject();
 		}	
-		catch (RemoteException re)
+		catch (Exception e)
 		{
-			re.printStackTrace();
+			e.printStackTrace();
 	    }
 		return false;
 	}
@@ -218,15 +179,27 @@ private ServerRemotes mRemotes;
 	 */
 	public Results search(String query,boolean student, int nthResult)
 	{
+	
 		Results results = null;
 		try
 		{
-			results = mSearcher.simpleSearch(query,student,nthResult);
+			mOutputStream.writeObject(query);
+			mOutputStream.writeObject(student);
+			mOutputStream.writeObject(nthResult);
+			mOutputStream.flush();
+			results = (Results) mInputStream.readObject();
 		}
-		catch (RemoteException re)
+		catch(IOException ioe)
 		{
-			re.printStackTrace();
+			ioe.printStackTrace();
 		}
+		catch(ClassNotFoundException cnfe)
+		{
+			cnfe.printStackTrace();
+		}
+
 		return results;
 	}
+	
+
 }

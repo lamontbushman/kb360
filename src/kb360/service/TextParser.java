@@ -28,13 +28,14 @@ public class TextParser extends Parser
    @Override
    public boolean parse()
    {
+      Scanner scanner = null;
       try
       {
          if(!mFile.exists())
          {
             System.out.println(mFile + " doesn't exist");
          }
-         Scanner scanner = new Scanner(mFile.getAbsoluteFile());
+         scanner = new Scanner(mFile.getAbsoluteFile());
          while(scanner.hasNext())
          {
             bodyText += scanner.nextLine() + "\n";
@@ -43,6 +44,13 @@ public class TextParser extends Parser
       catch(FileNotFoundException fnfe)
       {
          fnfe.printStackTrace();
+      }
+      finally
+      {
+    	  if (scanner != null)
+    	  {
+    		  scanner.close();
+    	  }
       }
       return false;
    }

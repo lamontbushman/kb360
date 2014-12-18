@@ -22,11 +22,13 @@ public class PDFParser extends Parser
    public PDFParser(String pdf)
    throws IOException
    {
-      final FileChannel channel = new FileInputStream(pdf).getChannel();
+	  FileInputStream fis = new FileInputStream(pdf);
+      final FileChannel channel = fis.getChannel();
       MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
       byte[] byteArray = new byte[buffer.remaining()];
       buffer.get(byteArray);
       channel.close();
+      fis.close();
 
       mReader = new PdfReader(byteArray);
       

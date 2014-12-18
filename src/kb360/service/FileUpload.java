@@ -99,7 +99,7 @@ public class FileUpload implements Upload
          outStream.write(bytes);
          outStream.flush();
          outStream.close();
-         setPermissions(newFile);
+         //setPermissions(newFile);
       }
       catch (IOException ioe)
       {
