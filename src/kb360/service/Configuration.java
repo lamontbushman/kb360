@@ -26,11 +26,10 @@ public class Configuration
 
       mKeysTypesAndPrompts = new ArrayList<KeyTypePrompt>();
 
-      String[] keys = {"upload","student","admin","httpURL",
-                       "registryPort","objectsPort","uploadPort","searchPort"};
-      String[] types = {"file","file","file","url","port","port","port","port"};
-      String[] prompts = {"Upload Folder","Student Folder","Admin Folder","URL path",
-               "Registry Port","Objects Port","Upload Port","Search Port"};
+      //TODO move this out to an Enum or a file.
+      String[] keys = {"upload","student","admin","httpURL"};
+      String[] types = {"file","file","file","url"};
+      String[] prompts = {"Upload Folder","Student Folder","Admin Folder","URL path"};
       addKeysTypesAndPrompts(keys,types,prompts);
 
       try
@@ -45,7 +44,6 @@ public class Configuration
       }
       catch (IOException ioe)
       {
-//         System.out.println("Configuration file was not found");
          configSet = false;
       }
    }
@@ -74,34 +72,34 @@ public class Configuration
       switch(key.getType())
       {
          case "file":
-                  File folder;
+        	File folder;
       
-                  JFileChooser chooser = new JFileChooser(new File("."));
-                  chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                  chooser.setApproveButtonToolTipText("Choose the " + key.getPrompt());
-                  int returnVal = chooser.showDialog(null,key.getPrompt());
-                  
-                  if (returnVal == JFileChooser.APPROVE_OPTION)
-                  {
-                     folder = chooser.getSelectedFile();
-                     if (!folder.exists() && folder.isDirectory())
-                     {
-                        JOptionPane.showMessageDialog
-                           (null,folder.getName() + " is not an existing folder","Error",
-                            JOptionPane.ERROR_MESSAGE);
-                        prompt(key);
-                     }
-                     else
-                     {
-                        propertiesMap.put(key.getKey(),folder.getPath());
-                     }
-                  }
-                  else
-                  {
-                     reprompt = true;
-                  }
-                  
-                  break;
+			JFileChooser chooser = new JFileChooser(new File("."));
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setApproveButtonToolTipText("Choose the " + key.getPrompt());
+			int returnVal = chooser.showDialog(null,key.getPrompt());
+			  
+			if (returnVal == JFileChooser.APPROVE_OPTION)
+			{
+			   folder = chooser.getSelectedFile();
+			   if (!folder.exists() && folder.isDirectory())
+			   {
+			      JOptionPane.showMessageDialog
+			         (null,folder.getName() + " is not an existing folder","Error",
+			          JOptionPane.ERROR_MESSAGE);
+			      prompt(key);
+			   }
+			   else
+			   {
+			      propertiesMap.put(key.getKey(),folder.getPath());
+			   }
+			}
+			else
+			{
+			   reprompt = true;
+			}
+			  
+			break;
          case "url":
             String value = JOptionPane.showInputDialog(
                null,key.getPrompt(),"Configuration",JOptionPane.INFORMATION_MESSAGE);
@@ -124,23 +122,6 @@ public class Configuration
                reprompt = true;
             }
             break;
-         case "port":
-            value = JOptionPane.showInputDialog(
-               null,key.getPrompt(),"Configuration",JOptionPane.INFORMATION_MESSAGE);
-            if (value != null && value != "")
-            {
-               int port = 0;
-               try
-               {
-                  port = Integer.parseInt(value);
-               }
-               catch(NumberFormatException nfe)
-               {
-                  JOptionPane.showMessageDialog(null,value + " is not a number","Port",JOptionPane.ERROR_MESSAGE);
-                  prompt(key);                  
-               }
-               propertiesMap.put(key.getKey(),port + "");
-            }
       }
       
       if (reprompt)
@@ -169,12 +150,6 @@ public class Configuration
           "http accessible URL: The URL to where your student and admin folders will exist on the web.\n" +
           "Student folder: Where is the student folder on your computer?\n" +
           "Admin folder: Where is the admin folder on your computer?\n" +
-          "Ports: The ports you enter have to be open. They can be the same port.\n" +
-          "          However, unique ports are preferred for speed purposes.\n" +
-          "Registry Port: For the initial connection to the server RMI registry. Port 1099 is usually the default.\n" +
-          "Objects Port: For the initial access to the Upload and Search remotes.\n" +
-          "Upload Port: For constant access to the Upload remote.\n" +
-          "Search Port: For constant access to the Search remote.\n" +
           
           "\nExample:\n" +
           "URL: \"http://kb360.com/kb360\"\n" +
@@ -185,7 +160,6 @@ public class Configuration
 
       for (KeyTypePrompt keyTypePrompt : mKeysTypesAndPrompts)
       {
-         System.out.println(keyTypePrompt);
          prompt(keyTypePrompt);
       }
       return true;
@@ -257,6 +231,6 @@ class KeyTypePrompt
 
    public String toString()
    {
-      return mKey +  " " + " " + mType + " " + mPrompt;
+      return "KeyTypePrompt: " + mKey +  ":" + mType + ":" + mPrompt;
    }
 }

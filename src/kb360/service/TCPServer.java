@@ -146,43 +146,39 @@ public class TCPServer
    /**
     *	Starts the server.
     */
-   public boolean start()
+   public void start()
    {
 		try
 		{
-			serverSocket = new ServerSocket(6000);
-			
+			serverSocket = new ServerSocket(6000);			
 			Socket socket;
-			
+			running = true;
+			System.out.println("Server running.");
 			while(true)
 			{
 				socket = serverSocket.accept();
 				HandleClient client = new HandleClient(socket,uploader,searcher);
 				clients.add(client);
 				client.start();
+				System.out.println("New client has connected.");
 			}
 		}
 		catch (IOException ioe)
 		{
 			ioe.printStackTrace();
+			running = false;
 		}
-		running = true;
-		return true;
    }
 
    /**
    * Sets up and runs the singleton TCPServer.
    */
-   public static boolean run()
+   public static void run()
    {
 		if (running)
-			return true;
-		if ("true".equals(System.getProperty("desktop","false")))
 		{
-			OptionPanePrintStream stream = new OptionPanePrintStream(
-				new ByteArrayOutputStream());
-			System.setOut(stream);
-			System.setErr(stream);
+			System.out.println("Server already running");
+			return;
 		}
       
 		Configuration config = new Configuration();
@@ -204,13 +200,7 @@ public class TCPServer
 			config.getProperty("httpURL")
 							);
 
-		if (mInstance.start())
-		{
-			System.out.println("Server up and running");
-			return true;
-		}
-		else
-			return false;
+		mInstance.start();
    }
 
    /**
@@ -218,6 +208,14 @@ public class TCPServer
     */
 	public static void main(String args[])
 	{
+		if ("true".equals(System.getProperty("desktop","false")))
+		{
+			OptionPanePrintStream stream = new OptionPanePrintStream(
+				new ByteArrayOutputStream());
+			System.setOut(stream);
+			System.setErr(stream);
+		}
+		
 		TCPServer.run();
 	}  
 }

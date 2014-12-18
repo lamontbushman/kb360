@@ -145,9 +145,9 @@ public class MainPanel extends Application
       }
    }
 
-   private void setUpAdminPane() 
+   private void setUpAdminPane()
    {   
-      Label missingLabel = new Label("Is there missing information?");
+      Label missingLabel = new Label("Recommend documents");
       missingLabel.setFont(Font.font("Verdana", FontWeight.BOLD, 13));
 
       final TextField fileTextField = new TextField();
@@ -163,7 +163,9 @@ public class MainPanel extends Application
       browseButton.setOnAction(
          new EventHandler<ActionEvent>()
          {
-            @Override
+        	//TODO replace deprecated FileChooserBuilder
+            @SuppressWarnings("deprecation")
+			@Override
                public void handle(ActionEvent Event)
             {
                FileChooserBuilder fcb;
