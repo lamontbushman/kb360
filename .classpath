@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/analyzers.jar"/>
+	<classpathentry kind="lib" path="lib/bcprov-jdk15on-149.jar"/>
+	<classpathentry kind="lib" path="lib/core.jar"/>
+	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/highlighter.jar"/>
+	<classpathentry kind="lib" path="lib/html.jar"/>
+	<classpathentry kind="lib" path="lib/jfxrt.jar"/>
+	<classpathentry kind="lib" path="lib/parser.jar"/>
+	<classpathentry kind="lib" path="lib/pdf.jar"/>
+	<classpathentry kind="lib" path="lib/PDFTextStream.jar"/>
+	<classpathentry kind="lib" path="lib/poi-ooxml-3.8-20120326.jar"/>
+	<classpathentry kind="lib" path="lib/poi-ooxml-schemas-3.8-20120326.jar"/>
+	<classpathentry kind="lib" path="lib/poi-scratchpad-3.8-20120326.jar"/>
+	<classpathentry kind="lib" path="lib/poi.jar"/>
+	<classpathentry kind="lib" path="lib/xmlbeans-2.3.0.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
