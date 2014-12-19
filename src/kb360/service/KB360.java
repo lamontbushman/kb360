@@ -11,6 +11,7 @@ import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 
 import javax.swing.JOptionPane;
 
@@ -19,6 +20,7 @@ public class KB360 {
 	private TCPServer mServer;
 	private MenuItem mStartItem;
 	private MenuItem mStopItem;
+	private MenuItem mUpdateItem;
 	
 	KB360() {
 		//Change System.out to a JOptionPane. I used System.out originally for headless servers that I was working with.
@@ -49,6 +51,9 @@ public class KB360 {
 		        		case "quit":
 		        			quit();
 		        			break;
+		        		case "update":
+		        			updateIndexes();
+		        			break;
 		        	}
 		        }
 		    };
@@ -71,6 +76,12 @@ public class KB360 {
 		    quitItem.setEnabled(true);
 		    quitItem.addActionListener(listener);
 		    popup.add(quitItem);
+		    
+		    mUpdateItem = new MenuItem("Update Database");
+		    mUpdateItem.setActionCommand("update");
+		    mUpdateItem.setEnabled(true);
+		    mUpdateItem.addActionListener(listener);
+		    popup.add(mUpdateItem);
 		    
 		    trayIcon = new TrayIcon(image, "KB360", popup);
 		    trayIcon.addActionListener(listener);
@@ -97,6 +108,7 @@ public class KB360 {
 								);
 		
 		mStartItem.setEnabled(false);
+		mUpdateItem.setEnabled(false);
 		mServer.start();
 		mStopItem.setEnabled(true);
 	}
@@ -110,6 +122,7 @@ public class KB360 {
 			e.printStackTrace();
 		}
 		mStartItem.setEnabled(true);
+		mUpdateItem.setEnabled(true);
 	}
 	
 	public void quit() {
@@ -140,7 +153,13 @@ public class KB360 {
 	}
 	
 	public void updateIndexes() {
-		
+		File[] files = new File[2];
+		files[0] = new File(mConfig.getProperty("student"));
+		files[1] = new File(mConfig.getProperty("admin"));
+
+		UpdateIndexes updater = new UpdateIndexes(files);
+		updater.update();
+		updater.showResults();
 	}
 	
 	public static void main(String args[]) {
