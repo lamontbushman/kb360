@@ -3,17 +3,14 @@ package kb360.service;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import javax.swing.*;
 
+import javax.swing.*;
 
 public class Configuration
 {
    private boolean configSet;
    private Properties properties;
    private String configFile;
-
-   private HashMap<String,String> propertiesMap;
-
    private ArrayList<KeyTypePrompt> mKeysTypesAndPrompts;
    
    public Configuration()
@@ -22,28 +19,18 @@ public class Configuration
       properties = new Properties();
       configFile = "kb360.config";
 
-      propertiesMap = new HashMap<String,String>();
-
       mKeysTypesAndPrompts = new ArrayList<KeyTypePrompt>();
 
       //TODO move this out to an Enum or a file.
-      String[] keys = {"upload","student","admin","httpURL"};
-      String[] types = {"file","file","file","url"};
-      String[] prompts = {"Upload Folder","Student Folder","Admin Folder","URL path"};
+      String[] keys = {"server", "httpURL", "upload"};
+      String[] types = {"file","url","file"};
+      String[] prompts = {"Server Folder", "File Server URL", "Upload Folder"};
       addKeysTypesAndPrompts(keys,types,prompts);
 
-      try
-      {
+      try {
          properties.load( new FileInputStream(configFile));
-
-         for (KeyTypePrompt keyType : mKeysTypesAndPrompts)
-         {
-            propertiesMap.put(keyType.getKey(),
-                              properties.getProperty(keyType.getKey()));
-         }
       }
-      catch (IOException ioe)
-      {
+      catch (IOException ioe) {
          configSet = false;
       }
    }
@@ -63,7 +50,7 @@ public class Configuration
 
    public String getProperty(String key)
    {
-      return propertiesMap.get(key);
+      return properties.getProperty(key);
    }
 
    private boolean prompt(KeyTypePrompt key)
@@ -91,7 +78,7 @@ public class Configuration
 			   }
 			   else
 			   {
-			      propertiesMap.put(key.getKey(),folder.getPath());
+			      properties.put(key.getKey(),folder.getPath());
 			   }
 			}
 			else
@@ -115,7 +102,7 @@ public class Configuration
                   JOptionPane.showMessageDialog(null,value + " is not a valid url","URL",JOptionPane.ERROR_MESSAGE);
                   prompt(key);
                }
-               propertiesMap.put(key.getKey(),value);
+               properties.put(key.getKey(),value);
             }
             else
             {
@@ -145,17 +132,36 @@ public class Configuration
    {
       JOptionPane.showMessageDialog
          (null,
-          "\nConfigure your knowledge base.\n" +
-          "\nUpload folder:  Where will you have your upload folder? It can be anywhere you want.\n" +
-          "http accessible URL: The URL to where your student and admin folders will exist on the web.\n" +
-          "Student folder: Where is the student folder on your computer?\n" +
-          "Admin folder: Where is the admin folder on your computer?\n" +
+          "Thanks for using Knowledge Base 360(KB360)!\n" +
+          "KB360 allows you to search and view documents* within an archive.\n" +
           
-          "\nExample:\n" +
-          "URL: \"http://kb360.com/kb360\"\n" +
-          "Upload: \"C://desktop/upload\"\n" +
-          "Student: \"kb360/student\"\n" +
-          "Admin: \"kb360/admin\"\n",
+          "\nKB360 will start a server to search the documents.\n" +
+          "In order to search the documents off the local network you'll need a public facing IP address.\n" +
+          
+          "\nYour KB360 documents also need to be able to be accesssed via the internet so they can be viewed in Google's Document Viewer.\n" +
+          "This requires your own HTTP file server for the documents. I have used Dropbox as an alternative**.\n" +
+        
+          "\nTo configure KB360 the following screens will prompt for:\n" +
+          "  Server Folder:\n" +
+          "    The local folder where the KB360 folders will be placed. This will be the root of your HTTP file server.\n" +
+          "    Two folders will be added to the Server Folder.\n" +
+          "       1. Admin - Folder where admin type files will be placed.\n" +
+          "       2. Student - Folder where student type files will be placed.\n" +
+          "       However, both types of files are designed to be accessible to all types of users.\n" +
+          "       Currently everytime new files are added to these folders, UpdateIndexes need to be rerun and the server restarted.\n" +
+          "  URL:\n" +
+          "     The URL to the Server Folder.\n" +
+          "     i.e. https://kb360.com/Server/\n" +
+          "  Upload Folder:\n" +
+          "     A folder where users will be able to upload recommended files for the database.\n" +
+          "     This folder is not required to be on the HTTP file server.\n" +
+        
+          "\n * Currently supports PDF, TXT, and HTML files. Microsoft type file capabilities have been removed due to Google's Terms of Use policies\n" +
+          "** I have used Dropbox's Public folder as an HTTP file server.\n" +
+          "    (Creating a Public folder - https://www.dropbox.com/en/help/16)\n" +
+          "    However, to have a Public folder it is now required to have a Pro or Business account.\n" +
+          "    After enabling your Public folder you can get a Public link to a folder within the Public folder.\n" +
+          "    i.e. https://dl.dropboxusercontent.com/u/123456789/Server/\n",
           "Configuration", JOptionPane.INFORMATION_MESSAGE);
 
       for (KeyTypePrompt keyTypePrompt : mKeysTypesAndPrompts)
@@ -165,37 +171,35 @@ public class Configuration
       return true;
    }
 
-   public boolean initialize()
+   public void initialize()
    {
       prompt();
 
-      for (KeyTypePrompt keyTypePrompt : mKeysTypesAndPrompts)
-      {
-         String key = keyTypePrompt.getKey();
-         properties.setProperty(key,propertiesMap.get(key));
-      }
-       
+      String serverFolder = properties.getProperty("server");
+	  File admin = new File(serverFolder + File.separator + "admin");
+	  admin.mkdir();
+	  File student = new File(serverFolder + File.separator + "student");
+	  student.mkdir();
+	  properties.setProperty("admin", admin.getPath());
+	  properties.setProperty("student", student.getPath());
+      
       String comments =
          "Do not delete, unless you want to change the paths to your files";
-      try
-      {
+      try {
          properties.store(new FileOutputStream(configFile),comments);
+         System.out.println("KB360 is now configured");
       }
-      catch(IOException ioe)
-      {
-         configSet = false;
+      catch(IOException ioe) {
+    	  System.out.println("KB360 was not able to be configured");
+    	  System.exit(0);
       }
       
-      configSet = true;
-
-      return configSet;
+      //configSet = true;
    }
    
-   public static void main(String args[])
-   {
+   public static void main(String args[]) {
       Configuration config = new Configuration();
-      if (!config.isSet())
-      {
+      if (!config.isSet()) {
          config.initialize();
       }
    }

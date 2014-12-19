@@ -9,11 +9,12 @@ import java.util.*;
 */
 class HandleClient extends Thread
 {
-	Socket mSocket;
-	ObjectInputStream mInputStream;
-	ObjectOutputStream mOutputStream;
-	FileUpload mUploader;
-	SearchIndex mSearcher;
+	private static boolean tcpServerRunning = true;
+	private ObjectInputStream mInputStream;
+	private ObjectOutputStream mOutputStream;
+	private Socket mSocket;
+	private FileUpload mUploader;
+	private SearchIndex mSearcher;
 	
 	HandleClient(Socket socket, FileUpload uploader, SearchIndex searcher)
 	{
@@ -37,7 +38,7 @@ class HandleClient extends Thread
 		}
 
 	}
-	
+		
 	@Override
 	public void run()
 	{
@@ -48,10 +49,10 @@ class HandleClient extends Thread
 		
 		try 
 		{
-			for(;;)
+			while(tcpServerRunning)
 			{
-				o = mInputStream.readObject();
-			
+				o = mInputStream.readObject();				
+				
 				if (o instanceof String)
 				{
 					query = (String) o;
@@ -98,124 +99,116 @@ class HandleClient extends Thread
 			cnfe.printStackTrace();
 		}
 	}
-	
-	public void close()
-	{
-		try
-		{
-			mInputStream.close();
-			mOutputStream.close();
-		}
-		catch(IOException ioe)
-		{
-			ioe.printStackTrace();
-		}
+		
+	public static void setServerStopped() {
+		tcpServerRunning = false;
 	}
 	
-	
+	public void finishProcces() {
+		try {
+			mSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
 
 /**
  * TCPServer listens for connections and then passes socket off to
  *  HandleClient.
  */
-public class TCPServer
-{
-   static TCPServer mInstance;
-   
-   private static boolean running = false;
-   
-   FileUpload uploader;
-   SearchIndex searcher;
-   ServerSocket serverSocket;
-   Vector<HandleClient> clients;
+public class TCPServer extends Thread {  
+   private Boolean running;
+   private FileUpload uploader;
+   private SearchIndex searcher;
+   private ServerSocket serverSocket;
+   private Vector<HandleClient> clients;
    
    /**
     *  Constructor. Initializes objects to upload and search the index.
 	*  The references to these objects are then passed to each HandleClient thread.
     */
-   private TCPServer(String pathToFileUpload,String pathToStudentFolder,
-                 String pathToAdminFolder, String httpURL)
-   {
-		uploader = new FileUpload(pathToFileUpload);
-		searcher = new SearchIndex(pathToStudentFolder,pathToAdminFolder,httpURL);
-		searcher.openReaders();
-		clients = new Vector<HandleClient>();
+   public TCPServer(String pathToFileUpload,String pathToStudentFolder,
+                 String pathToAdminFolder, String httpURL) {
+	   running = null;
+	   uploader = new FileUpload(pathToFileUpload);
+	   searcher = new SearchIndex(pathToStudentFolder,pathToAdminFolder,httpURL);
+	   searcher.openReaders();
+	   clients = new Vector<HandleClient>();
    }
 
-   /**
-    *	Starts the server.
-    */
-   public void start()
-   {
-		try
-		{
-			serverSocket = new ServerSocket(6000);			
-			Socket socket;
-			running = true;
-			System.out.println("Server running.");
-			while(true)
-			{
-				socket = serverSocket.accept();
-				HandleClient client = new HandleClient(socket,uploader,searcher);
-				clients.add(client);
-				client.start();
-				System.out.println("New client has connected.");
-			}
-		}
-		catch (IOException ioe)
-		{
-			ioe.printStackTrace();
-			running = false;
-		}
+   public void finishProccess() {
+	   running = false;
+	   try {
+		serverSocket.close();
+	   } catch (IOException e) {
+		   e.printStackTrace();
+	   }
+	   HandleClient.setServerStopped();
+	   for(HandleClient client : clients) {   
+		   client.finishProcces();
+	   }
+   }   
+  
+   public Boolean isRunning() {
+	   return running;
    }
 
-   /**
-   * Sets up and runs the singleton TCPServer.
-   */
-   public static void run()
-   {
-		if (running)
-		{
-			System.out.println("Server already running");
-			return;
-		}
-      
-		Configuration config = new Configuration();
-		if (!config.isSet())
-		{
-			System.out.println(
-				"Update Indexes First\n" + 
-				"Configuration is not set up\n" +
-				"Click UpdateIndexes to start creating the indexes.\n" +
-				"Also, you will need to put at least one document in your admin and student folders"
-                            ); 
-			System.exit(0);
-		}
+   public void run() {
+	   try {
+		   serverSocket = new ServerSocket(6000);			
+		   Socket socket;
+		   running = true;
+		   System.out.println("Server is now running");
+		   while(running) {
+			   try {
+				   socket = serverSocket.accept();
+				   HandleClient client = new HandleClient(socket,uploader,searcher);
+				   clients.add(client);
+				   client.start();
+			   } catch (SocketException se) {
+					 //Server socket intentionally closed.
+			   }
+		   }
 
-		mInstance = new TCPServer(
-			config.getProperty("upload"),
-			config.getProperty("student"),
-			config.getProperty("admin"),
-			config.getProperty("httpURL")
-							);
-
-		mInstance.start();
+		   for (HandleClient client : clients) {
+			   try {
+				   client.join();
+			   } catch (InterruptedException e) {
+				   System.out.println("Interrupted while joining with a HandleClient thread.");
+				   e.printStackTrace();
+			   }
+		   }
+	   } catch (IOException ioe) {
+		   ioe.printStackTrace();
+		   running = false;
+	   }
    }
 
    /**
     * Invokes the singleton TCPServer's run method.
     */
-	public static void main(String args[])
-	{
-		if ("true".equals(System.getProperty("desktop","false")))
-		{
+	public static void main(String args[]) {
+		if ("true".equals(System.getProperty("desktop","false"))) {
 			OptionPanePrintStream stream = new OptionPanePrintStream(
 				new ByteArrayOutputStream());
 			System.setOut(stream);
 			System.setErr(stream);
 		}
 		
-		TCPServer.run();
+		Configuration config = new Configuration();
+		if (!config.isSet()) {
+			System.out.println("Configuration is not set up."); 
+			System.exit(0);
+		}
+		
+		TCPServer server = new TCPServer(
+			config.getProperty("upload"),
+			config.getProperty("student"),
+			config.getProperty("admin"),
+			config.getProperty("httpURL")
+							);
+
+		server.start();
 	}  
 }

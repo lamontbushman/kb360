@@ -79,7 +79,7 @@ public class UpdateIndexes
       Configuration config = new Configuration();
       if (!config.isSet())
       {
-         config.initialize();  
+    	  config.initialize(); 
       }
 
       File[] files = new File[2];

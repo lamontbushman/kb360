@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * 
  */
-public class FileUpload implements Upload
+public class FileUpload
 {
    OutputStream stream;
    String mUploadDir;
@@ -29,6 +29,7 @@ public class FileUpload implements Upload
          file.mkdirs();
       }
    }
+   
 /**
    code from
    http://www.journaldev.com/855/how-to-set-file-permissions-in-java-easily-using-java-7-posixfilepermission
@@ -62,7 +63,7 @@ public class FileUpload implements Upload
       }
    }
 
-   File makeUniqueFile(String name, int i)
+   private File makeUniqueFile(String name, int i)
    {
       //Create a file
       File file;
@@ -82,13 +83,12 @@ public class FileUpload implements Upload
    }
 
    //helper function for recursive call
-   File makeUniqueFile(String name)
+   private File makeUniqueFile(String name)
    {
       return makeUniqueFile(name,0);
    }
 
-   @Override
-   public boolean upload(ByteArrayFile file)
+   public synchronized boolean upload(ByteArrayFile file)
    {
       byte[] bytes = file.getByteArray();
 
@@ -113,7 +113,6 @@ public class FileUpload implements Upload
     * @param files The files to be saved to the system.
     * @return Whether the upload was successful.
     */
-   @Override
    public boolean upload(ByteArrayFile[] files)
    {
       boolean allUploaded = true;
